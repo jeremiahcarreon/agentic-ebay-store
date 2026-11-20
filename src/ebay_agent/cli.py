@@ -104,9 +104,8 @@ async def _pending() -> None:
     if not runs:
         print("Nothing waiting for approval.")
     for run in runs:
-        print(
-            f"{run.id}  {run.name:<24} {run.state_name:<10} since {run.state.timestamp:%Y-%m-%d %H:%M}"
-        )
+        since = f"{run.state.timestamp:%Y-%m-%d %H:%M}" if run.state else "?"
+        print(f"{run.id}  {run.name:<24} {run.state_name or '':<10} since {since}")
 
 
 async def _resume(run_id: str, payload: dict[str, Any]) -> None:

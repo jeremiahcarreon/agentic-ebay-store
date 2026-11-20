@@ -18,9 +18,9 @@ from mcp.types import ToolAnnotations
 from ebay_agent.ebay.models import Listing
 from ebay_agent.ebay.store import EbayStore
 
-READ = ToolAnnotations(readOnlyHint=True, openWorldHint=True)
-WRITE = ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True)
-DESTRUCTIVE = ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=True)
+READ = ToolAnnotations(read_only_hint=True, open_world_hint=True)
+WRITE = ToolAnnotations(read_only_hint=False, destructive_hint=False, idempotent_hint=True)
+DESTRUCTIVE = ToolAnnotations(read_only_hint=False, destructive_hint=True, idempotent_hint=True)
 
 INSTRUCTIONS = """\
 Tools for running one eBay seller account: listings, inventory, pricing, orders and

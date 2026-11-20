@@ -18,8 +18,8 @@ from uuid import uuid4
 from fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 
-READ = ToolAnnotations(readOnlyHint=True)
-DRAFT = ToolAnnotations(readOnlyHint=False, destructiveHint=False)
+READ = ToolAnnotations(read_only_hint=True)
+DRAFT = ToolAnnotations(read_only_hint=False, destructive_hint=False)
 
 INSTRUCTIONS = """\
 You are connected to the company ERP. Look things up before answering: never estimate a
@@ -112,7 +112,7 @@ ORDERS: dict[str, dict[str, Any]] = {
     },
 }
 
-KNOWLEDGE = [
+KNOWLEDGE: list[dict[str, Any]] = [
     {
         "about": ["RAD-161", "FS-161"],
         "note": "FS-161 bolts directly to RAD-161; no brackets needed.",

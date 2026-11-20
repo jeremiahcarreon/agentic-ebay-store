@@ -5,8 +5,12 @@ from ebay_agent.workflow.approvals import ReviewDecision, _gate_key, render_revi
 
 
 def _p(price: float) -> Proposal:
-    return Proposal(tool="ebay_update_price", arguments={"sku": "A", "price": price},
-                    rationale="r", evidence={"current_price": 100.0})
+    return Proposal(
+        tool="ebay_update_price",
+        arguments={"sku": "A", "price": price},
+        rationale="r",
+        evidence={"current_price": 100.0},
+    )
 
 
 def test_gate_key_is_order_independent_and_content_addressed() -> None:

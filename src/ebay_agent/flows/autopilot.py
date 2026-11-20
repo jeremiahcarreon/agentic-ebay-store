@@ -6,7 +6,7 @@ from typing import Any
 
 from prefect import flow, get_run_logger, task
 from prefect.artifacts import acreate_table_artifact
-from prefect.deployments import run_deployment
+from prefect.deployments.flow_runs import arun_deployment
 
 from ebay_agent.ebay.factory import build_store
 from ebay_agent.ebay.simulator import SimulatedEbayStore
@@ -68,7 +68,7 @@ async def autopilot_flow(
     for name in selected:
         domain_flow = DOMAIN_FLOWS[name]
         if use_deployments:
-            run = await run_deployment(
+            run = await arun_deployment(
                 name=f"{domain_flow.name}/{domain_flow.name}", timeout=0, as_subflow=True
             )
             rows.append({"domain": name, "state": "triggered", "detail": str(run.id)})

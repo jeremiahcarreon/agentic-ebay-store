@@ -104,17 +104,20 @@ class LLMPlanner:
         return tools
 
     async def _create(self, **kwargs: Any) -> Any:
-        # Server-side refusal fallback keeps an over-eager safety decline from stalling a run.
-        return await self.client.beta.messages.create(
-            model=self.settings.anthropic_model,
-            max_tokens=16000,
-            thinking={"type": "adaptive"},
-            output_config={"effort": self.settings.agent_effort},
-            betas=["server-side-fallback-2026-07-01"],
-            fallbacks="default",
-            system=SYSTEM_PROMPT,
+        # A plain dict: model, effort and tool schemas are runtime configuration here, so the
+        # SDK's literal-typed overloads could only be satisfied with casts.
+        params: dict[str, Any] = {
+            "model": self.settings.anthropic_model,
+            "max_tokens": 16000,
+            "thinking": {"type": "adaptive"},
+            "output_config": {"effort": self.settings.agent_effort},
+            # Server-side refusal fallback keeps an over-eager decline from stalling a run.
+            "betas": ["server-side-fallback-2026-07-01"],
+            "fallbacks": "default",
+            "system": SYSTEM_PROMPT,
             **kwargs,
-        )
+        }
+        return await self.client.beta.messages.create(**params)
 
     async def plan(self, task: AgentTask) -> AgentPlan:
         proposals: list[Proposal] = []
