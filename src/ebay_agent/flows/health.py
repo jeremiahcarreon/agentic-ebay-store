@@ -63,6 +63,7 @@ async def health_flow() -> dict[str, Any]:
             resource={
                 "prefect.resource.id": "ebay-agent.store",
                 "prefect.resource.name": "eBay store",
+                "ebay-agent.kpi": alert.split("=", 1)[0],  # lets triggers match one metric
             },
             payload={"alert": alert, "metrics": metrics},
         )
