@@ -148,3 +148,12 @@ async def test_failed_publish_rolls_back_listing(env: Path, monkeypatch) -> None
     assert after.title == before.title and after.description == before.description
     assert after.status == "draft"
     assert [e.ok for e in outcome.executed] == [False]
+
+
+async def test_health_reports_breaches(env: Path) -> None:
+    from ebay_agent.flows.health import breaches, health_flow
+
+    _store()
+    report = await health_flow()
+    assert any(a.startswith("unanswered_messages") for a in report["alerts"])
+    assert breaches({"feedback_score_pct": 99.5, "unanswered_messages": 0}) == []
