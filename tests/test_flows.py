@@ -70,3 +70,15 @@ async def test_damaged_return_accepted_and_refunded(env: Path) -> None:
     outcome = await returns_flow()
     assert _store().list_returns()[0].status == "refunded"
     assert [e.tool for e in outcome.executed] == ["ebay_decide_return", "ebay_issue_refund"]
+
+
+async def test_reputation_feedback(env: Path) -> None:
+    from ebay_agent.flows.feedback import feedback_flow
+
+    _store()
+    outcome = await feedback_flow()
+    store = _store()
+    assert store.get_order("24-11880-10342").feedback_left
+    negative = next(f for f in store.list_feedback() if f.rating == "negative")
+    assert negative.seller_response and "sorry" in negative.seller_response.lower()
+    assert outcome.succeeded == 2
