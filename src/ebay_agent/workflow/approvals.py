@@ -36,6 +36,7 @@ from pydantic import BaseModel, Field
 
 from ebay_agent.config import ApprovalMode, get_settings
 from ebay_agent.policy import Proposal, RiskAssessment, RiskLevel
+from ebay_agent.workflow.decisions import DecisionLog
 
 
 class ReviewDecision(RunInput):
@@ -143,6 +144,11 @@ async def review_gate(
     for p, _ in pending:
         (result.approved if p.id in approved_ids else result.rejected).append(p)
     result.reviewer, result.note = decision.reviewer, decision.note
+    log = DecisionLog()
+    for p in result.approved:
+        log.record(p, "approved", decision.reviewer, decision.note)
+    for p in result.rejected:
+        log.record(p, "rejected", decision.reviewer, decision.note)
     logger.info(
         "Gate %r: %d approved, %d rejected by %s",
         title,

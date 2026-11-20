@@ -18,6 +18,7 @@ from prefect.context import TaskRunContext
 from ebay_agent.agent.base import AgentPlan, AgentTask, Planner
 from ebay_agent.agent.heuristics import HeuristicPlanner
 from ebay_agent.config import get_settings
+from ebay_agent.workflow.decisions import DecisionLog
 
 
 def choose_planner() -> Planner:
@@ -49,7 +50,18 @@ def _plan_key(context: TaskRunContext, parameters: dict[str, Any]) -> str:
 async def plan(agent_task: AgentTask) -> AgentPlan:
     logger = get_run_logger()
     planner = choose_planner()
-    result = await planner.plan(agent_task)
+    log = DecisionLog()
+    # Reviewer memory: show the agent recent decisions and notes for this domain...
+    informed = agent_task.model_copy(
+        update={"context": {**agent_task.context, "recent_reviews": log.recent(agent_task.domain)}}
+    )
+    result = await planner.plan(informed)
+    # ...and never re-propose a change a person rejected in the last week.
+    rejected = log.recently_rejected()
+    suppressed = [p for p in result.proposals if p.id in rejected]
+    if suppressed:
+        result.proposals = [p for p in result.proposals if p.id not in rejected]
+        result.summary += f" Suppressed {len(suppressed)} proposal(s) a reviewer recently rejected."
     logger.info(
         "%s planner: %d proposal(s), %d tool call(s). %s",
         planner.name,
