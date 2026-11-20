@@ -15,6 +15,8 @@ from pathlib import Path
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from ebay_agent.policy import PolicyConfig
+
 
 class EbayBackend(StrEnum):
     """Which eBay implementation the store server talks to."""
@@ -45,7 +47,9 @@ class ApprovalMode(StrEnum):
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="EBAY_AGENT_", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="EBAY_AGENT_", extra="ignore", env_nested_delimiter="__"
+    )
 
     data_dir: Path = Field(default=Path(".data"), description="Local state (simulator, audit).")
 
@@ -74,6 +78,7 @@ class Settings(BaseSettings):
     # --- Human in the loop ------------------------------------------------------------
     approval_mode: ApprovalMode = ApprovalMode.PREFECT
     approval_timeout_seconds: int = 60 * 60 * 24  # a day; unanswered = rejected
+    policy: PolicyConfig = Field(default_factory=PolicyConfig)  # EBAY_AGENT_POLICY__*
 
     @property
     def state_file(self) -> Path:
