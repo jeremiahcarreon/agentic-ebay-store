@@ -38,6 +38,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "ASYNC"]
+ignore = ["E501"]  # ruff format owns line length; long literals are fine
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
