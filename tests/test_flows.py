@@ -61,3 +61,12 @@ async def test_messages_wait_for_a_human_by_default(env: Path, monkeypatch) -> N
     assert outcome.executed == []  # customer-facing: MEDIUM risk, above default autonomy
     assert len(outcome.rejected) == 2
     assert len(_store().list_messages()) == 2
+
+
+async def test_damaged_return_accepted_and_refunded(env: Path) -> None:
+    from ebay_agent.flows.returns import returns_flow
+
+    _store()
+    outcome = await returns_flow()
+    assert _store().list_returns()[0].status == "refunded"
+    assert [e.tool for e in outcome.executed] == ["ebay_decide_return", "ebay_issue_refund"]
