@@ -21,3 +21,13 @@ async def test_fulfillment_uploads_erp_tracking(env: Path) -> None:
     assert outcome.succeeded == 1
     assert order.status == "shipped"
     assert order.tracking_number == "1Z999AA10123456799"
+
+
+async def test_inventory_mirrors_erp_available(env: Path) -> None:
+    from ebay_agent.flows.inventory import inventory_flow
+
+    store = _store()
+    store.update_quantity("RAD-161", 2)  # drifted from ERP (14)
+    outcome = await inventory_flow()
+    assert _store().get_listing("RAD-161").quantity == 14
+    assert {e.tool for e in outcome.executed} == {"ebay_update_quantity"}
