@@ -1,0 +1,51 @@
+[project]
+name = "agentic-ebay-store"
+version = "0.1.0"
+description = "Autonomous eBay store operations: an ERP MCP server wrapped in FastMCP, driven by durable Prefect flows with human-in-the-loop approval gates."
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Jeremiah Carreon" }]
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=2.11.0",
+    "fastmcp>=4.2.3",
+    "httpx>=0.28.1",
+    "prefect>=3.9.4",
+    "pydantic-settings>=2.16.3",
+]
+
+[project.scripts]
+ebay-agent = "ebay_agent.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.13.0,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "ebay_agent"
+
+[dependency-groups]
+dev = [
+    "mypy>=2.4.1",
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.5.0",
+    "ruff>=0.17.6",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "ASYNC"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+warn_unused_ignores = true
