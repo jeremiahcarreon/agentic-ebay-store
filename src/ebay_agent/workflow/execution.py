@@ -16,6 +16,7 @@ from typing import Any
 
 from prefect import get_run_logger, task
 from prefect.artifacts import acreate_table_artifact
+from prefect.concurrency.asyncio import concurrency
 from prefect.context import TaskRunContext
 from prefect.events import emit_event
 from pydantic import BaseModel, Field
@@ -24,6 +25,10 @@ from ebay_agent.config import get_settings
 from ebay_agent.policy import PolicyEngine, Proposal, RiskAssessment
 from ebay_agent.workflow.approvals import GateResult, review_gate
 from ebay_agent.workflow.gateway_client import ToolError, call_tool
+
+# `prefect gcl create ebay-store-writes --limit 2` caps concurrent store writes across all
+# runs and workers. Until that limit exists, acquiring it is a no-op (strict=False).
+STORE_WRITE_LIMIT = "ebay-store-writes"
 
 
 class ExecutionResult(BaseModel):
@@ -66,7 +71,9 @@ def _execution_key(context: TaskRunContext, parameters: dict[str, Any]) -> str:
 async def execute_proposal(proposal: Proposal) -> ExecutionResult:
     logger = get_run_logger()
     try:
-        payload = await call_tool(proposal.tool, proposal.arguments, allow_writes=True)
+        # Global limit across every flow and worker: eBay throttles per seller account.
+        async with concurrency(STORE_WRITE_LIMIT, occupy=1):
+            payload = await call_tool(proposal.tool, proposal.arguments, allow_writes=True)
     except ToolError as exc:  # the store said no: retrying will not change its mind
         logger.warning("%s failed: %s", proposal.summary(), exc)
         return ExecutionResult(
