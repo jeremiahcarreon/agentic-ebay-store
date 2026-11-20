@@ -117,3 +117,34 @@ async def test_promotions_target_slow_movers_only(env: Path) -> None:
     assert outcome.succeeded == 1
     again = await promotions_flow()  # already promoted -> nothing new
     assert again.executed == []
+
+
+async def test_listing_built_from_erp_and_published(env: Path) -> None:
+    from ebay_agent.flows.listings import listings_flow
+
+    _store()
+    outcome = await listings_flow()
+    listing = _store().get_listing("RAD-551")
+    assert listing.status == "active"
+    assert len(listing.title) <= 80 and "Chevelle" in listing.title
+    assert "1971 Chevrolet Chevelle" in listing.description
+    assert listing.item_specifics["Core Rows"] == "3"
+    assert outcome.succeeded == 2
+
+
+async def test_failed_publish_rolls_back_listing(env: Path, monkeypatch) -> None:
+    from prefect import task
+
+    import ebay_agent.flows.listings as listings
+
+    @task
+    async def broken_publish(proposal):
+        raise RuntimeError("eBay 500")
+
+    monkeypatch.setattr(listings, "publish", broken_publish)
+    before = _store().get_listing("RAD-551")
+    outcome = await listings.listings_flow()
+    after = _store().get_listing("RAD-551")
+    assert after.title == before.title and after.description == before.description
+    assert after.status == "draft"
+    assert [e.ok for e in outcome.executed] == [False]
