@@ -48,6 +48,8 @@ flowchart LR
 | **Resuming must not re-ask a non-deterministic model** | Reads and the agent plan are persisted task results cached per flow run. A resumed run reloads them (`Cached` state), reaches the *same* gate key, and gets the submitted decision. |
 | **Nothing executes twice** | Proposal ids are content hashes. Execution is cached on *flow run + proposal id*, and the simulator's writes are idempotent. Retried or resumed runs reuse recorded results. |
 | **No half-finished changes** | Listing publication (write content, then publish) runs in a Prefect **transaction**; an `on_rollback` hook restores the listing if publish fails. |
+| **The agent should learn from reviewers, not nag them** | Every gate decision lands in `decisions.jsonl`. The planner sees recent decisions and reviewer notes for its domain, and a change a person rejected in the last 7 days is not proposed again. |
+| **eBay rate limits across many schedules** | Every store write takes a slot on the `ebay-store-writes` Prefect global concurrency limit (`prefect gcl create ebay-store-writes --limit 2`); each deployment also has `concurrency_limit=1`. |
 | **Runs without credentials** | Offline defaults: JSON-persisted eBay simulator, a mock ERP with the real tool surface, and deterministic per-domain planners when no LLM key is set. CI runs everything this way. |
 
 ## What the agent runs
@@ -199,7 +201,7 @@ tests/                   unit tests + end-to-end flow runs on a throwaway Prefec
 ## Development
 
 ```bash
-uv run pytest -q          # 59 tests, ~25s, fully offline
+uv run pytest -q          # 61 tests, fully offline (spins up a throwaway Prefect server)
 uv run ruff check src tests && uv run ruff format --check src tests
 uv run mypy src
 ```
