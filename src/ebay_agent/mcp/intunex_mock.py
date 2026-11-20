@@ -94,11 +94,11 @@ ORDERS: dict[str, dict[str, Any]] = {
         "order_number": "521165",
         "ebay_username": "classicc10",
         "status": "open",
-        "fulfillment_stage": "ready_to_ship",
+        # Shipped from the warehouse this morning; eBay has not been told yet.
+        "fulfillment_stage": "shipped",
         "lines": [{"sku": "RAD-370", "qty": 1}],
-        "tracking": None,
-        "promised_ship_date": date.today().isoformat(),
-        "suggested_tracking": {"carrier": "UPS", "tracking_number": "1Z999AA10123456799"},
+        "tracking": {"carrier": "UPS", "number": "1Z999AA10123456799", "status": "in_transit"},
+        "shipped_on": date.today().isoformat(),
     },
     "24-11880-10342": {
         "order_id": "9f1c2e5a-0000-4000-8000-000000520990",

@@ -34,7 +34,7 @@ async def test_mock_answers_like_the_real_server() -> None:
         found = (await client.call_tool("find_order", {"ebay_order_id": "24-11873-55120"})).data
         stock = (await client.call_tool("check_stock", {"skus": ["RAD-259"]})).data
     assert found["is_exact"] is True
-    assert found["orders"][0]["fulfillment_stage"] == "ready_to_ship"
+    assert found["orders"][0]["tracking"]["carrier"] == "UPS"
     assert stock["stock"][0]["can_ship_today"] is False
     assert stock["stock"][0]["incoming"]["on_the_water"] == 40
 
