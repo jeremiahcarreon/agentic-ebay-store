@@ -157,3 +157,17 @@ async def test_health_reports_breaches(env: Path) -> None:
     report = await health_flow()
     assert any(a.startswith("unanswered_messages") for a in report["alerts"])
     assert breaches({"feedback_score_pct": 99.5, "unanswered_messages": 0}) == []
+
+
+async def test_autopilot_runs_the_whole_store(env: Path) -> None:
+    from ebay_agent.flows.autopilot import autopilot_flow
+
+    _store()
+    report = await autopilot_flow(simulate=True)
+    states = {r["domain"]: r["state"] for r in report["domains"]}
+    assert set(states.values()) == {"completed"}, states
+    store = _store()
+    m = store.metrics()
+    assert m.unanswered_messages == 0
+    assert store.get_listing("RAD-551").status == "active"
+    assert not any(a.startswith("unanswered_messages") for a in report["alerts"])
