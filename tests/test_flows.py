@@ -82,3 +82,26 @@ async def test_reputation_feedback(env: Path) -> None:
     negative = next(f for f in store.list_feedback() if f.rating == "negative")
     assert negative.seller_response and "sorry" in negative.seller_response.lower()
     assert outcome.succeeded == 2
+
+
+async def test_pricing_moves_stay_above_dealer_floor(env: Path) -> None:
+    from ebay_agent.flows.pricing import price_floor, pricing_flow
+
+    assert (
+        price_floor(
+            [
+                {"tier": "Tier 1", "unit_price": 205.0},
+                {"tier": "Tier 2", "unit_price": 219.0},
+                {"tier": "Retail", "unit_price": 289.0},
+            ]
+        )
+        == 219.0
+    )
+    _store()
+    outcome = await pricing_flow()
+    store = _store()
+    changed = {e.result["sku"]: e.result["price"] for e in outcome.executed}
+    assert changed["RAD-370"] > 319.0  # under a week of cover -> raise
+    assert changed["RAD-161"] < 289.0  # watchers not converting -> trim
+    assert "RAD-259" not in changed  # out of stock -> untouched
+    assert all(store.get_listing(s).price == p for s, p in changed.items())
