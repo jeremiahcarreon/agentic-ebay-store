@@ -105,3 +105,15 @@ async def test_pricing_moves_stay_above_dealer_floor(env: Path) -> None:
     assert changed["RAD-161"] < 289.0  # watchers not converting -> trim
     assert "RAD-259" not in changed  # out of stock -> untouched
     assert all(store.get_listing(s).price == p for s, p in changed.items())
+
+
+async def test_promotions_target_slow_movers_only(env: Path) -> None:
+    from ebay_agent.flows.promotions import promotions_flow
+
+    _store()
+    outcome = await promotions_flow()
+    [promo] = _store().list_promotions()
+    assert promo.skus == ["FS-161"] and promo.percent_off == 10
+    assert outcome.succeeded == 1
+    again = await promotions_flow()  # already promoted -> nothing new
+    assert again.executed == []
